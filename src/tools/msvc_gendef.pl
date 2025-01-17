@@ -83,6 +83,12 @@ sub extract_syms
 		next if $pieces[6] =~ /^@/;
 		next if $pieces[6] =~ /^\(/;
 
+		# Skip ARM64EC (Windows Arm64 emulation compatible) specific symbols
+		next if $pieces[6] =~ /^#/; # e.g. `#ATExecChangeOwner` (Arm64 Native Symbol)
+		next if $pieces[6] =~ /^\$ientry_thunk\$/; # e.g. `$ientry_thunk$cdecl$d$d`
+		next if $pieces[6] =~ /^\$iexit_thunk\$/; # e.g. `$iexit_thunk$cdecl$d$d`
+		next if $pieces[6] =~ /\$exit_thunk$/; # e.g. `#ASN1_INTEGER_to_BN$exit_thunk`
+
 		# __real and __xmm are out-of-line floating point literals and
 		# (for __xmm) their SIMD equivalents. They shouldn't be part
 		# of the DLL interface.
