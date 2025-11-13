@@ -33,15 +33,13 @@ jobs:
     runs-on: windows-11-arm
 
     steps:
-    - name: where meson
-      shell: cmd
-      run: |
-        where meson
+    - name: Setup Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.13' 
 
-    - name: where ninja
-      shell: cmd
-      run: |
-        where ninja
+    - name: pip install meson ninja
+      run: pip install meson ninja
 
     - uses: actions/checkout@v4
 
