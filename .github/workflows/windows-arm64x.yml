@@ -36,7 +36,7 @@ jobs:
     - name: Deploy win_flex_bison-2.5.25
       shell: pwsh
       run: |
-        wget https://github.com/lexxmark/winflexbison/releases/download/v2.5.25/win_flex_bison-2.5.25.zip
+        curl -OL https://github.com/lexxmark/winflexbison/releases/download/v2.5.25/win_flex_bison-2.5.25.zip
         unzip win_flex_bison-2.5.25.zip -d win_flex_bison
     
     - name: Setup Python
