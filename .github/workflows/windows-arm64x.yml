@@ -33,6 +33,12 @@ jobs:
     runs-on: windows-11-arm
 
     steps:
+    - name: Deploy win_flex_bison-2.5.25
+      shell: pwsh
+      run: |
+        wget https://github.com/lexxmark/winflexbison/releases/download/v2.5.25/win_flex_bison-2.5.25.zip
+        unzip win_flex_bison-2.5.25.zip -d win_flex_bison
+    
     - name: Setup Python
       uses: actions/setup-python@v6
       with:
@@ -82,7 +88,6 @@ jobs:
         mkdir postgres-pkg-config
 
     - name: Configure postgres to build Arm64X binaries
-      working-directory: PgBuilderGitRoot/PgBuilder
       shell: cmd
       run: |
         call "%APPLY_VCVARS%"
@@ -91,7 +96,10 @@ jobs:
         set LINK_EXE=%MSVCTargetBuildToolsBin%/link.exe
         set LIB_EXE=%MSVCTargetBuildToolsBin%/lib.exe
 
-        dotnet run -- postgresql-arm64x-prepare ^
+        PATH %PATH%;%GITHUB_WORKSPACE%/win_flex_bison
+        PATH %PATH%;%GITHUB_WORKSPACE%/postgres-build/src/timezone
+
+        dotnet PgBuilderGitRoot/PgBuilder/bin/Debug/net8.0/PgBuilder.dll postgresql-arm64x-prepare ^
          --meson meson.exe ^
          --prefix "%GITHUB_WORKSPACE%/postgres-inst" ^
          --build-dir "%GITHUB_WORKSPACE%/postgres-build" ^
@@ -103,7 +111,6 @@ jobs:
          "%GITHUB_WORKSPACE%"
 
     - name: Build postgres Arm64X binaries
-      working-directory: PgBuilderGitRoot/PgBuilder
       shell: cmd
       run: |
         call "%APPLY_VCVARS%"
@@ -111,6 +118,9 @@ jobs:
         set CL_EXE=%MSVCTargetBuildToolsBin%/cl.exe
         set LINK_EXE=%MSVCTargetBuildToolsBin%/link.exe
         set LIB_EXE=%MSVCTargetBuildToolsBin%/lib.exe
+
+        PATH %PATH%;%GITHUB_WORKSPACE%/win_flex_bison
+        PATH %PATH%;%GITHUB_WORKSPACE%/postgres-build/src/timezone
 
         ninja
 
