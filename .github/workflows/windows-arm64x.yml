@@ -1,0 +1,160 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: MSBuild
+
+on:
+  push:
+    branches: [ "master", "Branch_REL_*" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  # Path to the solution file relative to the root of the project.
+  SOLUTION_FILE_PATH: .
+
+  # Configuration type to build.
+  # You can convert this to a build matrix if you need coverage of multiple configuration types.
+  # https://docs.github.com/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+  BUILD_CONFIGURATION: Release
+
+  RELEASE_VERSION: "17.1"
+
+  APPLY_VCVARS: 'C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvarsarm64.bat'
+  MSVCTargetBuildToolsBin: 'C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.44.35207/bin/HostARM64/arm64'
+
+permissions:
+  contents: write # allows the action to create a release. For more information, see [Permissions required for GitHub Apps](https://docs.github.com/en/rest/overview/permissions-required-for-github-apps?apiVersion=2022-11-28#repository-permissions-for-contents).
+
+jobs:
+  world:
+    runs-on: windows-11-arm
+
+    steps:
+    - name: where meson
+      shell: cmd
+      run: |
+        where meson
+
+    - name: where ninja
+      shell: cmd
+      run: |
+        where ninja
+
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - uses: actions/checkout@v5.0.0
+      name: Toolings checkout
+      with:
+        repository: psqlodbc-for-win10-arm64/Toolings
+        path: ToolingsGitRoot
+
+    - name: Toolings Restore dependencies
+      working-directory: ToolingsGitRoot
+      run: dotnet restore
+
+    - name: Toolings Build
+      working-directory: ToolingsGitRoot
+      run: dotnet build --no-restore
+
+    - uses: actions/checkout@v5.0.0
+      name: PgBuilder checkout
+      with:
+        repository: psqlodbc-for-win10-arm64/PgBuilder
+        path: PgBuilderGitRoot
+
+    - name: PgBuilder Restore dependencies
+      working-directory: PgBuilderGitRoot
+      run: dotnet restore
+
+    - name: PgBuilder Build
+      working-directory: PgBuilderGitRoot
+      run: dotnet build --no-restore
+
+    - name: Make openssl.pc
+      shell: pwsh
+      run: |
+        mkdir postgres-pkg-config
+
+    - name: Configure postgres to build Arm64X binaries
+      working-directory: PgBuilderGitRoot/PgBuilder
+      shell: cmd
+      run: |
+        dotnet run -- postgresql-arm64x-prepare ^
+         --meson meson.exe ^
+         --prefix "%GITHUB_WORKSPACE%/postgres-inst" ^
+         --build-dir "%GITHUB_WORKSPACE%/postgres-build" ^
+         --pkg-config "%GITHUB_WORKSPACE%/ToolingsGitRoot/PkgConfigAlternative/bin/Debug/net8.0-windows/pkg-config.exe" ^
+         --pkg-config-dir "%GITHUB_WORKSPACE%/postgres-pkg-config" ^
+         --alt-cc "%GITHUB_WORKSPACE%/ToolingsGitRoot/Arm64XDualObjCL/bin/Debug/net8.0-windows/Arm64XDualObjCL.exe" ^
+         --alt-ld "%GITHUB_WORKSPACE%/ToolingsGitRoot/Arm64XDualObjLINK/bin/Debug/net8.0-windows/Arm64XDualObjLINK.exe" ^
+         --alt-ar "%GITHUB_WORKSPACE%/ToolingsGitRoot/Arm64XDualObjLIB/bin/Debug/net8.0-windows/Arm64XDualObjLIB.exe" ^
+         "%GITHUB_WORKSPACE%"
+
+    - name: Build postgres Arm64X binaries
+      working-directory: PgBuilderGitRoot/PgBuilder
+      shell: cmd
+      run: |
+        call "%APPLY_VCVARS%"
+
+        ninja
+
+    - name: Ensure binaries are Arm64X
+      shell: pwsh
+      run: |
+        # function is written with the help of gpt-4o-mini:
+        function Check-ExecutableType {
+            param (
+                [string]$ExePath,                  # The path to the executable file
+                [string]$ExpectedFileType          # The expected file type (for example, "X64" or "ARM64")
+            )
+
+            # Check if the executable exists
+            if (-Not (Test-Path $ExePath)) {
+                throw "The executable at '$ExePath' does not exist."
+            }
+
+            # Execute the IsArm64x command and get the output
+            $isArm64xPath = "${env:GITHUB_WORKSPACE}/ToolingsGitRoot/IsArm64x/bin/Debug/net8.0/IsArm64x.dll"
+            $output = & dotnet $isArm64xPath $ExePath
+
+            # Trim the output to remove trailing whitespace/newlines
+            $actualFileType = $output.Trim()
+
+            # Compare actual output with expected file type
+            if ($actualFileType -ne $ExpectedFileType) {
+                throw "Expected file type '$ExpectedFileType', but got '$actualFileType'."
+            }
+
+            # Return a success message if the types match
+            return "The executable '$ExePath' is of type '$actualFileType', as expected."
+        }
+
+        Check-ExecutableType "${env:GITHUB_WORKSPACE}/postgres-inst/bin/postgres.exe" "Arm64X"
+        Check-ExecutableType "${env:GITHUB_WORKSPACE}/postgres-inst/bin/libpq.dll"    "Arm64X"
+        Check-ExecutableType "${env:GITHUB_WORKSPACE}/postgres-inst/lib/lo.dll"       "Arm64X"
+        
+    - name: Create gh-release dir
+      shell: pwsh
+      run: mkdir gh-release
+
+    - name: Make a zip
+      working-directory: postgres-inst
+      shell: pwsh
+      run: |
+        7z.exe a -r "${env:GITHUB_WORKSPACE}/gh-release/postgresql-${env:RELEASE_VERSION}-windows-arm64x.zip" .
+
+    - name: Make a GitHub Release
+      uses: xresloader/upload-to-github-release@v1.6.1
+      with:
+        default_release_name: 'v${{ env.RELEASE_VERSION }} (Arm64X)'
+        file: gh-release/*.zip
+        prerelease: true
+        verbose: true
