@@ -123,7 +123,7 @@ jobs:
         PATH %PATH%;%GITHUB_WORKSPACE%/win_flex_bison
         PATH %PATH%;%GITHUB_WORKSPACE%/postgres-build/src/timezone
 
-        dotnet run --project "%GITHUB_WORKSPACE%/PgBuilder/PgBuilder.csproj" -- postgresql-arm64x-prepare ^
+        dotnet run --project "%GITHUB_WORKSPACE%/PgBuilder/PgBuilder/PgBuilder.csproj" -- postgresql-arm64x-prepare ^
          --meson meson.exe ^
          --prefix "%GITHUB_WORKSPACE%/postgres-inst" ^
          --build-dir "%GITHUB_WORKSPACE%/postgres-build" ^
@@ -132,7 +132,7 @@ jobs:
          --alt-cc "%GITHUB_WORKSPACE%/Toolings/Arm64XDualObjCL/bin/Debug/net8.0-windows/Arm64XDualObjCL.exe" ^
          --alt-ld "%GITHUB_WORKSPACE%/Toolings/Arm64XDualObjLINK/bin/Debug/net8.0-windows/Arm64XDualObjLINK.exe" ^
          --alt-ar "%GITHUB_WORKSPACE%/Toolings/Arm64XDualObjLIB/bin/Debug/net8.0-windows/Arm64XDualObjLIB.exe" ^
-         "%GITHUB_WORKSPACE%"
+         "%GITHUB_WORKSPACE%/postgres"
 
     - name: Build postgres Arm64X binaries
       working-directory: postgres
