@@ -33,12 +33,6 @@ jobs:
     runs-on: windows-11-arm
 
     steps:
-    - name: Deploy win_flex_bison-2.5.25
-      shell: pwsh
-      run: |
-        curl -OL https://github.com/lexxmark/winflexbison/releases/download/v2.5.25/win_flex_bison-2.5.25.zip
-        unzip win_flex_bison-2.5.25.zip -d win_flex_bison
-    
     - name: Setup Python
       uses: actions/setup-python@v6
       with:
@@ -48,6 +42,12 @@ jobs:
       run: pip install meson ninja
 
     - uses: actions/checkout@v4
+
+    - name: Deploy win_flex_bison-2.5.25
+      shell: pwsh
+      run: |
+        curl -OL https://github.com/lexxmark/winflexbison/releases/download/v2.5.25/win_flex_bison-2.5.25.zip
+        unzip win_flex_bison-2.5.25.zip -d win_flex_bison
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
