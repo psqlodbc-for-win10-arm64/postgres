@@ -33,6 +33,32 @@ jobs:
     runs-on: windows-11-arm
 
     steps:
+    - name: Deploy Win64Arm64XOpenSSL-3.5.4
+      shell: pwsh
+      run: |
+        curl -OL https://github.com/psqlodbc-for-win10-arm64/openssl/releases/download/untagged-2ee97bdd5702fc714d85/Win64Arm64XOpenSSL-3.5.4.zip
+        unzip Win64Arm64XOpenSSL-3.5.4.zip -d openssl
+
+    - name: Make openssl.pc
+      shell: pwsh
+      run: |
+        mkdir postgres-pkg-config
+        pushd postgres-pkg-config
+
+        $libdir = "${env:GITHUB_WORKSPACE}/Program Files/OpenSSL/lib"
+        $includedir = "${env:GITHUB_WORKSPACE}/Program Files/OpenSSL/include"
+
+        $pcFileContent = @"
+        Name: OpenSSL
+        Description: Secure Sockets Layer and cryptography libraries and tools
+        Version: 3.4.0
+        Libs: -L"${libdir}" -lssl -lcrypto
+        Cflags: -I"${includedir}"
+        "@
+
+        Set-Content -Path "openssl.pc" $pcFileContent
+
+        popd
     - name: Setup Python
       uses: actions/setup-python@v6
       with:
@@ -41,7 +67,9 @@ jobs:
     - name: pip install meson ninja
       run: pip install meson ninja
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
+      with:
+        path: postgres
 
     - name: Deploy win_flex_bison-2.5.25
       shell: pwsh
@@ -58,36 +86,32 @@ jobs:
       name: Toolings checkout
       with:
         repository: psqlodbc-for-win10-arm64/Toolings
-        path: ToolingsGitRoot
+        path: Toolings
 
     - name: Toolings Restore dependencies
-      working-directory: ToolingsGitRoot
+      working-directory: Toolings
       run: dotnet restore
 
     - name: Toolings Build
-      working-directory: ToolingsGitRoot
+      working-directory: Toolings
       run: dotnet build --no-restore
 
     - uses: actions/checkout@v5.0.0
       name: PgBuilder checkout
       with:
         repository: psqlodbc-for-win10-arm64/PgBuilder
-        path: PgBuilderGitRoot
+        path: PgBuilder
 
     - name: PgBuilder Restore dependencies
-      working-directory: PgBuilderGitRoot
+      working-directory: PgBuilder
       run: dotnet restore
 
     - name: PgBuilder Build
-      working-directory: PgBuilderGitRoot
+      working-directory: PgBuilder
       run: dotnet build --no-restore
 
-    - name: Make openssl.pc
-      shell: pwsh
-      run: |
-        mkdir postgres-pkg-config
-
     - name: Configure postgres to build Arm64X binaries
+      working-directory: postgres
       shell: cmd
       run: |
         call "%APPLY_VCVARS%"
@@ -99,18 +123,19 @@ jobs:
         PATH %PATH%;%GITHUB_WORKSPACE%/win_flex_bison
         PATH %PATH%;%GITHUB_WORKSPACE%/postgres-build/src/timezone
 
-        dotnet PgBuilderGitRoot/PgBuilder/bin/Debug/net8.0/PgBuilder.dll postgresql-arm64x-prepare ^
+        dotnet run --project "%GITHUB_WORKSPACE%/PgBuilder/PgBuilder.csproj" -- postgresql-arm64x-prepare ^
          --meson meson.exe ^
          --prefix "%GITHUB_WORKSPACE%/postgres-inst" ^
          --build-dir "%GITHUB_WORKSPACE%/postgres-build" ^
-         --pkg-config "%GITHUB_WORKSPACE%/ToolingsGitRoot/PkgConfigAlternative/bin/Debug/net8.0-windows/pkg-config.exe" ^
+         --pkg-config "%GITHUB_WORKSPACE%/Toolings/PkgConfigAlternative/bin/Debug/net8.0-windows/pkg-config.exe" ^
          --pkg-config-dir "%GITHUB_WORKSPACE%/postgres-pkg-config" ^
-         --alt-cc "%GITHUB_WORKSPACE%/ToolingsGitRoot/Arm64XDualObjCL/bin/Debug/net8.0-windows/Arm64XDualObjCL.exe" ^
-         --alt-ld "%GITHUB_WORKSPACE%/ToolingsGitRoot/Arm64XDualObjLINK/bin/Debug/net8.0-windows/Arm64XDualObjLINK.exe" ^
-         --alt-ar "%GITHUB_WORKSPACE%/ToolingsGitRoot/Arm64XDualObjLIB/bin/Debug/net8.0-windows/Arm64XDualObjLIB.exe" ^
+         --alt-cc "%GITHUB_WORKSPACE%/Toolings/Arm64XDualObjCL/bin/Debug/net8.0-windows/Arm64XDualObjCL.exe" ^
+         --alt-ld "%GITHUB_WORKSPACE%/Toolings/Arm64XDualObjLINK/bin/Debug/net8.0-windows/Arm64XDualObjLINK.exe" ^
+         --alt-ar "%GITHUB_WORKSPACE%/Toolings/Arm64XDualObjLIB/bin/Debug/net8.0-windows/Arm64XDualObjLIB.exe" ^
          "%GITHUB_WORKSPACE%"
 
     - name: Build postgres Arm64X binaries
+      working-directory: postgres
       shell: cmd
       run: |
         call "%APPLY_VCVARS%"
@@ -140,7 +165,7 @@ jobs:
             }
 
             # Execute the IsArm64x command and get the output
-            $isArm64xPath = "${env:GITHUB_WORKSPACE}/ToolingsGitRoot/IsArm64x/bin/Debug/net8.0/IsArm64x.dll"
+            $isArm64xPath = "${env:GITHUB_WORKSPACE}/Toolings/IsArm64x/bin/Debug/net8.0/IsArm64x.dll"
             $output = & dotnet $isArm64xPath $ExePath
 
             # Trim the output to remove trailing whitespace/newlines
@@ -158,7 +183,7 @@ jobs:
         Check-ExecutableType "${env:GITHUB_WORKSPACE}/postgres-inst/bin/postgres.exe" "Arm64X"
         Check-ExecutableType "${env:GITHUB_WORKSPACE}/postgres-inst/bin/libpq.dll"    "Arm64X"
         Check-ExecutableType "${env:GITHUB_WORKSPACE}/postgres-inst/lib/lo.dll"       "Arm64X"
-        
+
     - name: Create gh-release dir
       shell: pwsh
       run: mkdir gh-release
