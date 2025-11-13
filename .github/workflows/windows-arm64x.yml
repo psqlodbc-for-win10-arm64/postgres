@@ -36,7 +36,7 @@ jobs:
     - name: Deploy Win64Arm64XOpenSSL-3.5.4
       shell: pwsh
       run: |
-        curl -OL https://github.com/psqlodbc-for-win10-arm64/openssl/releases/download/untagged-2ee97bdd5702fc714d85/Win64Arm64XOpenSSL-3.5.4.zip
+        curl -OL https://github.com/psqlodbc-for-win10-arm64/openssl/releases/download/Branch_openssl-3.5.4-5e1feff5/Win64Arm64XOpenSSL-3.5.4.zip
         unzip Win64Arm64XOpenSSL-3.5.4.zip -d openssl
 
     - name: Make openssl.pc
