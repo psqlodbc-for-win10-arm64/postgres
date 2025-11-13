@@ -85,6 +85,12 @@ jobs:
       working-directory: PgBuilderGitRoot/PgBuilder
       shell: cmd
       run: |
+        call "%APPLY_VCVARS%"
+
+        set CL_EXE=%MSVCTargetBuildToolsBin%/cl.exe
+        set LINK_EXE=%MSVCTargetBuildToolsBin%/link.exe
+        set LIB_EXE=%MSVCTargetBuildToolsBin%/lib.exe
+
         dotnet run -- postgresql-arm64x-prepare ^
          --meson meson.exe ^
          --prefix "%GITHUB_WORKSPACE%/postgres-inst" ^
@@ -101,6 +107,10 @@ jobs:
       shell: cmd
       run: |
         call "%APPLY_VCVARS%"
+
+        set CL_EXE=%MSVCTargetBuildToolsBin%/cl.exe
+        set LINK_EXE=%MSVCTargetBuildToolsBin%/link.exe
+        set LIB_EXE=%MSVCTargetBuildToolsBin%/lib.exe
 
         ninja
 
