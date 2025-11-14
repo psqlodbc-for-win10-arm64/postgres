@@ -31,6 +31,12 @@ jobs:
     runs-on: windows-11-arm
 
     steps:
+    - name: Deploy zic
+      shell: pwsh
+      run: |
+        curl -OLs https://github.com/psqlodbc-for-win10-arm64/zic/releases/download/v17.1/zic-arm64x.zip
+        unzip -q zic-arm64x.zip -d zic
+
     - name: Deploy Win64Arm64XOpenSSL-3.5.4
       shell: pwsh
       run: |
@@ -122,10 +128,9 @@ jobs:
         set CL_EXE=%MSVCTargetBuildToolsBin%/cl.exe
         set LINK_EXE=%MSVCTargetBuildToolsBin%/link.exe
         set LIB_EXE=%MSVCTargetBuildToolsBin%/lib.exe
-
+  
         PATH %PATH%;%GITHUB_WORKSPACE%/win_flex_bison
-        REM src\timezone\meson.build:31:10: ERROR: Program 'zic' not found or not executable
-        PATH %PATH%;%GITHUB_WORKSPACE%/postgres-build/src/timezone
+        PATH %PATH%;%GITHUB_WORKSPACE%/zic
 
         dotnet run --project "%GITHUB_WORKSPACE%/PgBuilder/PgBuilder/PgBuilder.csproj" --no-build /p:Platform="AnyCPU"  -- postgresql-arm64x-prepare ^
          --meson meson.exe ^
@@ -139,7 +144,7 @@ jobs:
          "%GITHUB_WORKSPACE%/postgres"
 
     - name: Build postgres Arm64X binaries
-      working-directory: postgres
+      working-directory: postgres-build
       shell: cmd
       run: |
         call "%APPLY_VCVARS%"
@@ -149,8 +154,7 @@ jobs:
         set LIB_EXE=%MSVCTargetBuildToolsBin%/lib.exe
 
         PATH %PATH%;%GITHUB_WORKSPACE%/win_flex_bison
-        REM src\timezone\meson.build:31:10: ERROR: Program 'zic' not found or not executable
-        PATH %PATH%;%GITHUB_WORKSPACE%/postgres-build/src/timezone
+        PATH %PATH%;%GITHUB_WORKSPACE%/zic
 
         ninja
 
