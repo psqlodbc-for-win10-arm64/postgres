@@ -124,7 +124,8 @@ jobs:
         set LIB_EXE=%MSVCTargetBuildToolsBin%/lib.exe
 
         PATH %PATH%;%GITHUB_WORKSPACE%/win_flex_bison
-        PATH %PATH%;%GITHUB_WORKSPACE%/postgres-build/src/timezone
+        REM src\timezone\meson.build:31:10: ERROR: Program 'zic' not found or not executable
+        PATH %PATH%;%GITHUB_WORKSPACE%/postgres/src/timezone
 
         dotnet run --project "%GITHUB_WORKSPACE%/PgBuilder/PgBuilder/PgBuilder.csproj" --no-build /p:Platform="AnyCPU"  -- postgresql-arm64x-prepare ^
          --meson meson.exe ^
@@ -148,7 +149,8 @@ jobs:
         set LIB_EXE=%MSVCTargetBuildToolsBin%/lib.exe
 
         PATH %PATH%;%GITHUB_WORKSPACE%/win_flex_bison
-        PATH %PATH%;%GITHUB_WORKSPACE%/postgres-build/src/timezone
+        REM src\timezone\meson.build:31:10: ERROR: Program 'zic' not found or not executable
+        PATH %PATH%;%GITHUB_WORKSPACE%/postgres/src/timezone
 
         ninja
 
