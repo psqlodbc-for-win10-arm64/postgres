@@ -125,7 +125,7 @@ jobs:
 
         PATH %PATH%;%GITHUB_WORKSPACE%/win_flex_bison
         REM src\timezone\meson.build:31:10: ERROR: Program 'zic' not found or not executable
-        PATH %PATH%;%GITHUB_WORKSPACE%/postgres/src/timezone
+        PATH %PATH%;%GITHUB_WORKSPACE%/postgres-build/src/timezone
 
         dotnet run --project "%GITHUB_WORKSPACE%/PgBuilder/PgBuilder/PgBuilder.csproj" --no-build /p:Platform="AnyCPU"  -- postgresql-arm64x-prepare ^
          --meson meson.exe ^
@@ -150,7 +150,7 @@ jobs:
 
         PATH %PATH%;%GITHUB_WORKSPACE%/win_flex_bison
         REM src\timezone\meson.build:31:10: ERROR: Program 'zic' not found or not executable
-        PATH %PATH%;%GITHUB_WORKSPACE%/postgres/src/timezone
+        PATH %PATH%;%GITHUB_WORKSPACE%/postgres-build/src/timezone
 
         ninja
 
