@@ -156,7 +156,7 @@ jobs:
         PATH %PATH%;%GITHUB_WORKSPACE%/win_flex_bison
         PATH %PATH%;%GITHUB_WORKSPACE%/zic
 
-        ninja
+        ninja install
 
     - name: Ensure binaries are Arm64X
       shell: pwsh
