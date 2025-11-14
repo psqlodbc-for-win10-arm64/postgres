@@ -34,8 +34,8 @@ jobs:
     - name: Deploy Win64Arm64XOpenSSL-3.5.4
       shell: pwsh
       run: |
-        curl -OL https://github.com/psqlodbc-for-win10-arm64/openssl/releases/download/Branch_openssl-3.5.4-81ebb734/Win64Arm64XOpenSSL-3_5_4-SNAPSHOT.zip
-        unzip Win64Arm64XOpenSSL-3_5_4-SNAPSHOT.zip -d openssl
+        curl -OLs https://github.com/psqlodbc-for-win10-arm64/openssl/releases/download/Branch_openssl-3.5.4-81ebb734/Win64Arm64XOpenSSL-3_5_4-SNAPSHOT.zip
+        unzip -q Win64Arm64XOpenSSL-3_5_4-SNAPSHOT.zip -d openssl
 
     - name: Make openssl.pc
       shell: pwsh
@@ -56,7 +56,14 @@ jobs:
 
         Set-Content -Path "openssl.pc" $pcFileContent
 
+        type openssl.pc
+
         popd
+
+    - name: tree openssl
+      shell: cmd
+      run: tree openssl
+
     - name: Setup Python
       uses: actions/setup-python@v6
       with:
