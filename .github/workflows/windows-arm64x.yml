@@ -60,10 +60,6 @@ jobs:
 
         popd
 
-    - name: tree openssl
-      shell: cmd
-      run: tree openssl
-
     - name: Setup Python
       uses: actions/setup-python@v6
       with:
@@ -132,7 +128,7 @@ jobs:
          --meson meson.exe ^
          --prefix "%GITHUB_WORKSPACE%/postgres-inst" ^
          --build-dir "%GITHUB_WORKSPACE%/postgres-build" ^
-         --pkg-config "%GITHUB_WORKSPACE%/Toolings/PkgConfigAlternative/bin/Debug/net8.0-windows/pkg-config.exe" ^
+         --pkg-config "%GITHUB_WORKSPACE%/Toolings/PkgConfigAlternative/bin/Debug/net8.0/pkg-config.exe" ^
          --pkg-config-dir "%GITHUB_WORKSPACE%/postgres-pkg-config" ^
          --alt-cc "%GITHUB_WORKSPACE%/Toolings/Arm64XDualObjCL/bin/Debug/net8.0-windows/Arm64XDualObjCL.exe" ^
          --alt-ld "%GITHUB_WORKSPACE%/Toolings/Arm64XDualObjLINK/bin/Debug/net8.0-windows/Arm64XDualObjLINK.exe" ^
