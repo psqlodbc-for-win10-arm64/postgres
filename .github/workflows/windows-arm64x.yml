@@ -43,8 +43,8 @@ jobs:
         mkdir postgres-pkg-config
         pushd postgres-pkg-config
 
-        $libdir = "${env:GITHUB_WORKSPACE}/lib"
-        $includedir = "${env:GITHUB_WORKSPACE}/include"
+        $libdir = "${env:GITHUB_WORKSPACE}/openssl/lib"
+        $includedir = "${env:GITHUB_WORKSPACE}/openssl/include"
 
         $pcFileContent = @"
         Name: OpenSSL
