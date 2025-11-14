@@ -45,8 +45,8 @@ jobs:
 
         # I saw `-IC:apostgrespostgres/openssl/include` by `"${env:GITHUB_WORKSPACE}/openssl/include"`.
 
-        $libdir = "${env:GITHUB_WORKSPACE}/openssl/lib".Replace("\\", "/")
-        $includedir = "${env:GITHUB_WORKSPACE}/openssl/include".Replace("\\", "/")
+        $libdir = "${env:GITHUB_WORKSPACE}/openssl/lib".Replace("\", "/")
+        $includedir = "${env:GITHUB_WORKSPACE}/openssl/include".Replace("\", "/")
 
         $pcFileContent = @"
         Name: OpenSSL
