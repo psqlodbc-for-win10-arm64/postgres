@@ -7,9 +7,7 @@ name: MSBuild
 
 on:
   push:
-    branches: [ "master", "Branch_REL_*" ]
-  pull_request:
-    branches: [ "master" ]
+    branches: [ "Branch_REL_*" ]
 
 env:
   # Path to the solution file relative to the root of the project.
@@ -20,7 +18,7 @@ env:
   # https://docs.github.com/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
   BUILD_CONFIGURATION: Release
 
-  RELEASE_VERSION: "17.1"
+  RELEASE_VERSION: "17.1-SNAPSHOT"
 
   APPLY_VCVARS: 'C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvarsarm64.bat'
   MSVCTargetBuildToolsBin: 'C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.44.35207/bin/HostARM64/arm64'
@@ -36,8 +34,8 @@ jobs:
     - name: Deploy Win64Arm64XOpenSSL-3.5.4
       shell: pwsh
       run: |
-        curl -OL https://github.com/psqlodbc-for-win10-arm64/openssl/releases/download/Branch_openssl-3.5.4-5e1feff5/Win64Arm64XOpenSSL-3.5.4.zip
-        unzip Win64Arm64XOpenSSL-3.5.4.zip -d openssl
+        curl -OL https://github.com/psqlodbc-for-win10-arm64/openssl/releases/download/Branch_openssl-3.5.4-81ebb734/Win64Arm64XOpenSSL-3_5_4-SNAPSHOT.zip
+        unzip Win64Arm64XOpenSSL-3_5_4-SNAPSHOT.zip -d openssl
 
     - name: Make openssl.pc
       shell: pwsh
@@ -45,15 +43,15 @@ jobs:
         mkdir postgres-pkg-config
         pushd postgres-pkg-config
 
-        $libdir = "${env:GITHUB_WORKSPACE}/Program Files/OpenSSL/lib"
-        $includedir = "${env:GITHUB_WORKSPACE}/Program Files/OpenSSL/include"
+        $libdir = "${env:GITHUB_WORKSPACE}/lib"
+        $includedir = "${env:GITHUB_WORKSPACE}/include"
 
         $pcFileContent = @"
         Name: OpenSSL
         Description: Secure Sockets Layer and cryptography libraries and tools
-        Version: 3.4.0
-        Libs: -L"${libdir}" -lssl -lcrypto
-        Cflags: -I"${includedir}"
+        Version: 3.5.4
+        Libs: -L${libdir} -lssl -lcrypto
+        Cflags: -I${includedir}
         "@
 
         Set-Content -Path "openssl.pc" $pcFileContent
@@ -123,7 +121,7 @@ jobs:
         PATH %PATH%;%GITHUB_WORKSPACE%/win_flex_bison
         PATH %PATH%;%GITHUB_WORKSPACE%/postgres-build/src/timezone
 
-        dotnet run --project "%GITHUB_WORKSPACE%/PgBuilder/PgBuilder/PgBuilder.csproj" -- postgresql-arm64x-prepare ^
+        dotnet run --project "%GITHUB_WORKSPACE%/PgBuilder/PgBuilder/PgBuilder.csproj" --no-build /p:Platform="AnyCPU"  -- postgresql-arm64x-prepare ^
          --meson meson.exe ^
          --prefix "%GITHUB_WORKSPACE%/postgres-inst" ^
          --build-dir "%GITHUB_WORKSPACE%/postgres-build" ^
@@ -199,5 +197,6 @@ jobs:
       with:
         default_release_name: 'v${{ env.RELEASE_VERSION }} (Arm64X)'
         file: gh-release/*.zip
+        draft: false
         prerelease: true
         verbose: true
