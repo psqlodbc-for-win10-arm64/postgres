@@ -43,8 +43,10 @@ jobs:
         mkdir postgres-pkg-config
         pushd postgres-pkg-config
 
-        $libdir = "${env:GITHUB_WORKSPACE}/openssl/lib"
-        $includedir = "${env:GITHUB_WORKSPACE}/openssl/include"
+        # I saw `-IC:apostgrespostgres/openssl/include` by `"${env:GITHUB_WORKSPACE}/openssl/include"`.
+
+        $libdir = "${env:GITHUB_WORKSPACE}/openssl/lib".Replace("\\", "/")
+        $includedir = "${env:GITHUB_WORKSPACE}/openssl/include".Replace("\\", "/")
 
         $pcFileContent = @"
         Name: OpenSSL
