@@ -91,7 +91,7 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
-    - uses: actions/checkout@v5.0.0
+    - uses: actions/checkout@v6.1.0
       name: Toolings checkout
       with:
         repository: psqlodbc-for-win10-arm64/Toolings
@@ -105,11 +105,12 @@ jobs:
       working-directory: Toolings
       run: dotnet build --no-restore
 
-    - uses: actions/checkout@v5.0.0
+    - uses: actions/checkout@v6.1.0
       name: PgBuilder checkout
       with:
         repository: psqlodbc-for-win10-arm64/PgBuilder
         path: PgBuilder
+        submodules: true
 
     - name: PgBuilder Restore dependencies
       working-directory: PgBuilder
