@@ -623,7 +623,13 @@ typedef LONG slock_t;
 /* If using Visual C++ on Win64, inline assembly is unavailable.
  * Use a _mm_pause intrinsic instead of rep nop.
  */
-#if defined(_WIN64)
+#if defined(_M_ARM64) || defined(_M_ARM64EC)
+static __forceinline void
+spin_delay(void)
+{
+	__yield();
+}
+#elif defined(_WIN64)
 static __forceinline void
 spin_delay(void)
 {
